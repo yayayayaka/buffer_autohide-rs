@@ -1,0 +1,12 @@
+[package]
+name = "buffer_autohide-rs"
+version = "0.0.1"
+authors = ["Lara <lara@uwu.is>"]
+edition = "2018"
+
+[lib]
+name = "buffer_autohide"
+crate-type = ["dylib"]
+
+[dependencies]
+weechat = {version = "*", features = ["config_macro"]}
