@@ -1,28 +1,40 @@
-use std::collections::HashMap;
-use std::hash::Hash;
-use weechat::config::Config;
-use weechat::{buffer::Buffer, plugin, Args, Plugin, Weechat};
+//! Rewrite of the buffer_autohide.py script for Weechat
+//!
+//! The python script is perfectly fine, I am just eager to learn a bit of Rust ^-^
+
+use weechat::hooks::{SignalCallback, SignalData, SignalHook};
+use weechat::{plugin, Args, Plugin, ReturnCode, Weechat};
+
+use callbacks::{BufferLineAdded, BufferSwitch};
+use conf::Config;
+
+mod callbacks;
+mod conf;
 
 struct BufferAutoHide {
-    current_buffer: String,
-    current_buffer_timer_hook: Option<i32>,
-    keep_alive_buffers: HashMap<String, String>,
+    config: Config,
+    buffer_switch: SignalHook,
+    buffer_line_added: SignalHook,
 }
 
 impl Plugin for BufferAutoHide {
-    fn init(_: &Weechat, _: Args) -> Result<Self, ()> {
-        Weechat::print("Hello from Rust");
-        Ok(Self {
-            current_buffer: "0x0".to_string(),
-            current_buffer_timer_hook: None,
-            keep_alive_buffers: HashMap::new(),
-        })
-    }
-}
+    fn init(_: &Weechat, _args: Args) -> Result<Self, ()> {
+        let config = Config::new().expect("Error creating config");
+        if let Err(e) = config.read() {
+            Weechat::print(&format!(
+                "Error reading the buffer_autohide config file {:?}",
+                e
+            ));
+            return Err(());
+        }
 
-impl Drop for BufferAutoHide {
-    fn drop(&mut self) {
-        Weechat::print("Bye from Rust");
+        Ok(Self {
+            config,
+            buffer_switch: SignalHook::new("buffer_switch", BufferSwitch::new())
+                .expect("Could not register the buffer_switch callback"),
+            buffer_line_added: SignalHook::new("buffer_line_added", BufferLineAdded::new())
+                .expect("Could not register the buffer_line_added callback"),
+        })
     }
 }
 

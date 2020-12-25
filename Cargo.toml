@@ -9,4 +9,4 @@ name = "buffer_autohide"
 crate-type = ["dylib"]
 
 [dependencies]
-weechat = {version = "*", features = ["config_macro"]}
+weechat = {version = "0.4.0", features = ["config_macro"]}
